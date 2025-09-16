@@ -1,0 +1,191 @@
+/* static/css/style.css (VERSÃO COMPLETA E CORRIGIDA) */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap');
+
+:root {
+    --carbonell-azul-escuro: #2b3a6c;
+    --carbonell-azul-marinho: #1e2a4d;
+    --carbonell-amarelo: #f7b53b;
+    --carbonell-vermelho: #d82a2b;
+    --carbonell-branco: #ffffff;
+    --fundo-claro: #f0f2f5;
+    --cinza-borda: #e4e6eb;
+    --cinza-texto: #65676b;
+    --verde-sucesso: #42b72a;
+    --vermelho-erro: #fa383e;
+}
+
+/* --- Reset e Base --- */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--fundo-claro);
+    color: var(--carbonell-azul-marinho);
+}
+.container {
+    width: 100%;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+/* --- Cabeçalho --- */
+.main-header {
+    background-color: var(--carbonell-branco);
+    padding: 1rem;
+    border-bottom: 1px solid var(--cinza-borda);
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.header-container {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Centraliza título por padrão */
+    position: relative;
+}
+.header-title {
+    font-size: 1.25rem;
+    color: var(--carbonell-azul-escuro);
+}
+.back-button {
+    position: absolute;
+    left: 1rem;
+    font-size: 2rem;
+    color: var(--carbonell-azul-escuro);
+    text-decoration: none;
+}
+.back-button:hover { opacity: 0.7; }
+
+/* --- Títulos de Página --- */
+.page-subtitle { color: var(--cinza-texto); font-size: 1rem; margin-bottom: 0.25rem; }
+.page-title { color: var(--carbonell-azul-marinho); font-size: 1.8rem; margin-bottom: 1.5rem; }
+.page-title-container { text-align: center; margin-bottom: 2rem; }
+.text-center { text-align: center; }
+
+/* --- Formulário de Busca --- */
+.search-form { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+.form-input {
+    flex-grow: 1; padding: 0.8rem 1rem; font-size: 1rem;
+    border: 1px solid var(--cinza-borda); border-radius: 20px; background-color: #f0f2f5;
+}
+.form-input:focus { outline: 2px solid var(--carbonell-azul-escuro); }
+.form-button {
+    background-color: var(--carbonell-azul-escuro); color: var(--carbonell-branco);
+    border: none; padding: 0.8rem 1.5rem; font-size: 1rem; border-radius: 20px;
+    cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: background-color 0.2s;
+}
+.form-button:hover { background-color: var(--carbonell-azul-marinho); }
+
+/* --- Resultados da Busca --- */
+.results-container { margin-top: 2rem; }
+.results-title { font-size: 1.2rem; color: var(--carbonell-azul-marinho); margin-bottom: 1rem; }
+.results-list { list-style: none; }
+.result-item a {
+    display: flex; align-items: center; padding: 1rem;
+    background-color: var(--carbonell-branco); border-radius: 8px; margin-bottom: 0.5rem;
+    text-decoration: none; color: var(--carbonell-azul-marinho);
+    transition: box-shadow 0.2s, transform 0.2s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    gap: 1rem; /* Espaço entre foto e texto */
+}
+.result-item a:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+.aluno-nome { font-weight: 500; }
+.aluno-turma { font-size: 0.9rem; color: var(--cinza-texto); margin-top: 0.15rem; }
+.details-arrow { margin-left: auto; color: var(--cinza-borda); font-size: 1.2rem; }
+
+/* --- Cards de Informação (Página de Detalhes) --- */
+.info-card {
+    background-color: var(--carbonell-branco); border-radius: 12px; margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden;
+}
+.card-header {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 1rem 1.25rem; border-bottom: 1px solid var(--fundo-claro);
+}
+.card-icon { font-size: 1.5rem; color: var(--carbonell-azul-escuro); }
+.card-header h3 { font-size: 1.1rem; color: var(--carbonell-azul-marinho); }
+
+/* --- Lista de Pessoas Autorizadas --- */
+.person-list { list-style: none; }
+.person-item, .person-item-empty {
+    display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem;
+}
+.person-item:not(:last-child) { border-bottom: 1px solid var(--fundo-claro); }
+.person-item-empty { color: var(--cinza-texto); }
+.avatar, .avatar-placeholder {
+    width: 50px; height: 50px; border-radius: 50%; object-fit: cover;
+}
+.avatar-placeholder {
+    background-color: var(--cinza-borda); display: flex;
+    align-items: center; justify-content: center;
+    font-size: 1.5rem; color: var(--cinza-texto);
+}
+.person-info { display: flex; flex-direction: column; flex-grow: 1; }
+.person-name { font-weight: 500; }
+.person-detail { font-size: 0.9rem; color: var(--cinza-texto); }
+
+/* --- Lista de Regras --- */
+.rules-list { list-style: none; }
+.rule-item {
+    display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem;
+}
+.rule-item:not(:last-child) { border-bottom: 1px solid var(--fundo-claro); }
+.rule-status { font-size: 1.2rem; font-weight: bold; }
+.rule-status.allowed { color: var(--verde-sucesso); }
+.rule-status.denied { color: var(--vermelho-erro); }
+
+/* --- Mensagens Flash --- */
+.flash-messages { margin-top: 1.5rem; }
+.flash { padding: 0.8rem 1rem; border-radius: 6px; margin-bottom: 1rem; border: 1px solid transparent; }
+.flash.error { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+.flash.info { background-color: #cce5ff; color: #004085; border-color: #b8daff; }
+
+/* --- Elementos da Página Inicial --- */
+.home-container { text-align: center; padding-top: 1rem; }
+.home-logo { max-width: 150px; margin-bottom: 1rem; }
+.home-title { color: var(--carbonell-azul-escuro); margin-bottom: 0.5rem; font-size: 2rem; }
+
+/* --- Avatar do Aluno (Página de Detalhes) --- */
+.student-avatar, .student-avatar-placeholder {
+    width: 100px; height: 100px; border-radius: 50%; object-fit: cover;
+    margin: 0 auto 1rem auto; border: 4px solid var(--carbonell-branco);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.student-avatar-placeholder {
+    background-color: var(--cinza-borda); display: flex;
+    align-items: center; justify-content: center;
+    font-size: 3rem; color: var(--cinza-texto);
+}
+
+.loading-overlay {
+    display: none; /* Escondido por padrão */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.7);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.spinner {
+    border: 5px solid var(--fundo-claro);
+    border-top: 5px solid var(--carbonell-azul-escuro);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* --- Estilo para Botão Desabilitado --- */
+.form-button:disabled {
+    background-color: var(--cinza-texto);
+    cursor: not-allowed;
+}
+

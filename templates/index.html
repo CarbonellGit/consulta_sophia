@@ -1,0 +1,93 @@
+{% extends "layout_base.html" %}
+
+{% block title %}Busca de Alunos{% endblock %}
+
+{% block content %}
+<div class="loading-overlay" id="loading-indicator">
+    <div class="spinner"></div>
+</div>
+
+<div class="home-container">
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo Carbonell" class="home-logo">
+
+    <p class="page-subtitle text-center">Digite o nome do aluno para consultar as autorizações.</p>
+
+    <form action="{{ url_for('buscar_aluno') }}" method="POST" class="search-form" id="search-form">
+        <input type="text" name="nome_aluno" class="form-input" placeholder="Nome do aluno..." required value="{{ request.form.nome_aluno or '' }}">
+        <button type="submit" class="form-button" id="search-button">
+            <i class="bi bi-search"></i> 
+            <span>Buscar</span>
+        </button>
+    </form>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-messages">
+        {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+{% if alunos is defined and alunos %}
+<div class="results-container">
+    <h2 class="results-title">Resultados da Busca</h2>
+    <ul class="results-list">
+        {% for aluno in alunos %}
+        <li class="result-item">
+            <a href="{{ url_for('detalhes_aluno', aluno_id=aluno.codigo) }}">
+                {% if aluno.foto_uri %}
+                    <img src="{{ aluno.foto_uri }}" class="avatar" alt="Foto de {{ aluno.nome }}">
+                {% else %}
+                    <div class="avatar-placeholder"><i class="bi bi-person-fill"></i></div>
+                {% endif %}
+                <div class="person-info">
+                    <span class="aluno-nome">{{ aluno.nome }}</span>
+                    {% if aluno.turmas %}
+                        <span class="aluno-turma">{{ aluno.turmas[0].descricao }}</span>
+                    {% endif %}
+                </div>
+                <i class="bi bi-chevron-right details-arrow"></i>
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchForm = document.getElementById('search-form');
+        const searchButton = document.getElementById('search-button');
+        const loadingIndicator = document.getElementById('loading-indicator');
+
+        if (searchForm) {
+            searchForm.addEventListener('submit', function() {
+                if (loadingIndicator) {
+                    loadingIndicator.style.display = 'flex';
+                }
+                if (searchButton) {
+                    searchButton.disabled = true;
+                    searchButton.querySelector('span').textContent = 'Buscando...';
+                }
+            });
+        }
+    });
+
+    window.addEventListener('pageshow', function(event) {
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const searchButton = document.getElementById('search-button');
+        if (event.persisted) {
+            if (loadingIndicator) {
+                loadingIndicator.style.display = 'none';
+            }
+            if (searchButton) {
+                searchButton.disabled = false;
+                searchButton.querySelector('span').textContent = 'Buscar';
+            }
+        }
+    });
+</script>
+{% endblock %}
