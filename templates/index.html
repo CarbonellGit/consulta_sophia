@@ -9,13 +9,12 @@
 
 <div class="home-container">
     <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo Carbonell" class="home-logo">
-
     <p class="page-subtitle text-center">Digite o nome do aluno para consultar as autorizações.</p>
 
     <form action="{{ url_for('buscar_aluno') }}" method="POST" class="search-form" id="search-form">
-        <input type="text" name="nome_aluno" class="form-input" placeholder="Nome do aluno..." required value="{{ request.form.nome_aluno or '' }}">
+        <input type="text" name="nome_aluno" class="form-input" placeholder="Nome do aluno..." required value="{{ busca_anterior or '' }}">
         <button type="submit" class="form-button" id="search-button">
-            <i class="bi bi-search"></i> 
+            <i class="bi bi-search"></i>
             <span>Buscar</span>
         </button>
     </form>
@@ -62,7 +61,8 @@
         const searchForm = document.getElementById('search-form');
         const searchButton = document.getElementById('search-button');
         const loadingIndicator = document.getElementById('loading-indicator');
-
+        
+        // Lógica para o botão de busca (já existente)
         if (searchForm) {
             searchForm.addEventListener('submit', function() {
                 if (loadingIndicator) {
@@ -74,8 +74,21 @@
                 }
             });
         }
+
+        // --- NOVO TRECHO ADICIONADO ---
+        // Lógica para os links de resultado
+        const resultLinks = document.querySelectorAll('.result-item a');
+        resultLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                if (loadingIndicator) {
+                    loadingIndicator.style.display = 'flex';
+                }
+            });
+        });
+        // --- FIM DO NOVO TRECHO ---
     });
 
+    // Lógica para o botão "voltar" do navegador (já existente)
     window.addEventListener('pageshow', function(event) {
         const loadingIndicator = document.getElementById('loading-indicator');
         const searchButton = document.getElementById('search-button');
