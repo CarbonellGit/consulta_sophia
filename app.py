@@ -2,6 +2,7 @@
 import os
 import requests
 import unicodedata
+import time # Importado para controlar o cache
 from flask import Flask, render_template, request, flash, redirect, url_for
 from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor
@@ -21,16 +22,35 @@ SOPHIA_API_HOSTNAME = os.getenv('SOPHIA_API_HOSTNAME', 'portal.sophia.com.br')
 SOPHIA_API_BASE_URL = f"https://{SOPHIA_API_HOSTNAME}/SophiAWebApi/{SOPHIA_TENANT}"
 
 
+# --- Sistema de Cache ---
+# Cache para o Token da API
+api_token_cache = {
+    "token": None,
+    "expires_at": 0
+}
+# Cache para os Resultados da Busca
+search_cache = {}
+CACHE_DURATION_SECONDS = 60 # Guardar resultados por 60 segundos
+
+
 # --- Funções Auxiliares ---
 
 def get_sophia_token():
-    """Obtém um token de autenticação da API Sophia."""
+    """Obtém um token da API, usando o cache para evitar chamadas repetidas."""
+    if api_token_cache["token"] and time.time() < api_token_cache["expires_at"]:
+        return api_token_cache["token"]
+
     auth_url = SOPHIA_API_BASE_URL + "/api/v1/Autenticacao"
     auth_data = {"usuario": SOPHIA_USER, "senha": SOPHIA_PASSWORD}
     try:
         response = requests.post(auth_url, json=auth_data, timeout=10)
         response.raise_for_status()
-        return response.text
+        
+        new_token = response.text
+        api_token_cache["token"] = new_token
+        api_token_cache["expires_at"] = time.time() + (29 * 60) # Validade de 29 minutos
+        
+        return new_token
     except requests.exceptions.RequestException as e:
         print(f"Erro ao obter token da API: {e}")
         return None
@@ -75,9 +95,14 @@ def index():
 
 @app.route('/buscar', methods=['POST'])
 def buscar_aluno():
-    """Processa a busca de alunos, filtra por nome/sobrenome e exibe os resultados."""
+    """Processa a busca de alunos, usa cache e filtra por nome/sobrenome."""
     termo_busca = request.form.get('nome_aluno', '').strip()
 
+    cache_key = termo_busca.lower()
+    if cache_key in search_cache and time.time() < search_cache[cache_key]['expires_at']:
+        print("Resultado encontrado no cache!")
+        return render_template('index.html', **search_cache[cache_key]['data'])
+    
     token = get_sophia_token()
     if not token:
         flash('Erro de autenticação com o sistema Sophia.', 'error')
@@ -85,8 +110,6 @@ def buscar_aluno():
 
     headers = {'token': token}
     search_url = SOPHIA_API_BASE_URL + "/api/v1/Alunos"
-    
-    # Estratégia: usa apenas o primeiro nome na API para uma busca ampla
     primeiro_nome = termo_busca.split(' ')[0]
     params = {'Nome': primeiro_nome}
     
@@ -95,7 +118,6 @@ def buscar_aluno():
         response.raise_for_status()
         alunos_da_api = response.json()
 
-        # Filtro inteligente em Python para encontrar nome e sobrenomes
         termos_normalizados = [normalizar_texto(term) for term in termo_busca.split()]
         alunos_filtrados = []
         for aluno in alunos_da_api:
@@ -103,7 +125,6 @@ def buscar_aluno():
             if all(term in nome_aluno_normalizado for term in termos_normalizados):
                 alunos_filtrados.append(aluno)
 
-        # Busca as fotos em paralelo apenas para os alunos filtrados
         fotos_mapeadas = {}
         codigos_alunos = [aluno['codigo'] for aluno in alunos_filtrados]
         with ThreadPoolExecutor(max_workers=10) as executor:
@@ -119,7 +140,13 @@ def buscar_aluno():
         if not alunos_filtrados:
             flash(f'Nenhum aluno encontrado para "{termo_busca}".', 'info')
         
-        return render_template('index.html', alunos=alunos_filtrados, busca_anterior=termo_busca)
+        template_data = {'alunos': alunos_filtrados, 'busca_anterior': termo_busca}
+        search_cache[cache_key] = {
+            'data': template_data,
+            'expires_at': time.time() + CACHE_DURATION_SECONDS
+        }
+        
+        return render_template('index.html', **template_data)
 
     except requests.exceptions.RequestException as e:
         flash(f'Erro ao se comunicar com a API: {e}', 'error')
@@ -127,7 +154,7 @@ def buscar_aluno():
 
 @app.route('/aluno/<int:aluno_id>')
 def detalhes_aluno(aluno_id):
-    """Exibe a página de detalhes com pessoas autorizadas e todas as regras de saída."""
+    """Exibe a página de detalhes com TODAS as pessoas autorizadas e regras de saída."""
     token = get_sophia_token()
     if not token:
         flash('Erro de autenticação ao buscar detalhes.', 'error')
@@ -147,7 +174,6 @@ def detalhes_aluno(aluno_id):
 
         _, aluno_foto_uri = buscar_foto_aluno(aluno_id, headers)
 
-        # Coleta todas as seis regras de saída da API
         regras_saida = {
             'acompanhado': dados_autorizacao.get('deixarEscolaAcompanhado', False),
             'sozinho': dados_autorizacao.get('deixarEscolaSozinho', False),
@@ -158,28 +184,39 @@ def detalhes_aluno(aluno_id):
         }
         
         pais_e_maes_bruto, outras_pessoas_bruto = [], []
-        codigos_responsaveis = [r.get('codigo') for r in resp_responsaveis if r and r.get('retiradaAutorizada')]
         
-        fotos_mapeadas = {}
-        with ThreadPoolExecutor(max_workers=10) as executor:
-            futures = [executor.submit(buscar_foto_responsavel, codigo, headers) for codigo in set(codigos_responsaveis)]
-            for future in futures:
-                codigo, foto_uri = future.result()
-                if foto_uri:
-                    fotos_mapeadas[codigo] = foto_uri
-        
+        # Processa a lista de responsáveis diretos
         for resp in resp_responsaveis:
             if resp and resp.get('retiradaAutorizada'):
-                resp['foto_uri'] = fotos_mapeadas.get(resp.get('codigo'))
                 tipo_vinculo = resp.get('tipoVinculo')
                 if tipo_vinculo and tipo_vinculo.get('descricao') in ['Pai', 'Mãe']:
                     pais_e_maes_bruto.append(resp)
                 else:
                     outras_pessoas_bruto.append(resp)
         
-        # Filtra o nome do próprio aluno da lista de pessoas autorizadas
-        pais_e_maes = [p for p in pais_e_maes_bruto if p.get('nome').lower() != aluno_nome.lower()]
-        outras_pessoas = [p for p in outras_pessoas_bruto if p.get('nome').lower() != aluno_nome.lower()]
+        # Adiciona a lista de "outras pessoas autorizadas"
+        for pessoa in dados_autorizacao.get('outrasPessoas', []):
+            outras_pessoas_bruto.append(pessoa)
+
+        # Coleta todos os códigos para buscar as fotos
+        codigos_para_buscar_foto = {p.get('codigo') for p in pais_e_maes_bruto + outras_pessoas_bruto if p.get('codigo')}
+
+        # Busca todas as fotos em paralelo
+        fotos_mapeadas = {}
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = [executor.submit(buscar_foto_responsavel, codigo, headers) for codigo in codigos_para_buscar_foto]
+            for future in futures:
+                codigo, foto_uri = future.result()
+                if foto_uri:
+                    fotos_mapeadas[codigo] = foto_uri
+        
+        # Atribui as fotos e filtra o nome do próprio aluno
+        for pessoa_lista in [pais_e_maes_bruto, outras_pessoas_bruto]:
+            for pessoa in pessoa_lista:
+                pessoa['foto_uri'] = fotos_mapeadas.get(pessoa.get('codigo'))
+
+        pais_e_maes = [p for p in pais_e_maes_bruto if p.get('nome', '').lower() != aluno_nome.lower()]
+        outras_pessoas = [p for p in outras_pessoas_bruto if p.get('nome', '').lower() != aluno_nome.lower()]
 
         return render_template('detalhes_aluno.html',
             aluno_nome=aluno_nome,
@@ -194,5 +231,4 @@ def detalhes_aluno(aluno_id):
 
 # --- Inicialização do Servidor ---
 if __name__ == '__main__':
-    # Roda a aplicação em modo de depuração para desenvolvimento local
     app.run(debug=True)
