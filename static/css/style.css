@@ -189,3 +189,27 @@ body {
     cursor: not-allowed;
 }
 
+/* --- Detalhes na Lista de Pessoas --- */
+.person-details-group {
+    display: flex;
+    flex-wrap: wrap; /* Permite que os itens quebrem a linha */
+    gap: 0.25rem 1rem; /* Espaçamento vertical e horizontal */
+    margin-top: 0.25rem;
+}
+
+.person-detail {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem; /* Espaço entre o ícone e o texto */
+    font-size: 0.85rem;
+    color: var(--cinza-texto);
+}
+
+/* --- Cabeçalho para as seções da lista --- */
+.person-list-header {
+    background-color: var(--fundo-claro);
+    padding: 0.5rem 1.25rem;
+    font-weight: 500;
+    color: var(--carbonell-azul-marinho);
+    font-size: 0.9rem;
+}
