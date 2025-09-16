@@ -4,15 +4,7 @@
 
 {% block content %}
 <div class="page-title-container">
-    {% if aluno_foto_uri %}
-        <img src="{{ aluno_foto_uri }}" class="student-avatar" alt="Foto de {{ aluno_nome }}">
-    {% else %}
-        <div class="student-avatar-placeholder"><i class="bi bi-person-bounding-box"></i></div>
-    {% endif %}
-
-    <p class="page-subtitle">Informações de Saída para</p>
-    <h2 class="page-title">{{ aluno_nome }}</h2>
-</div>
+    </div>
 
 <div class="info-card">
     <div class="card-header">
@@ -20,86 +12,64 @@
         <h3>Pessoas Autorizadas</h3>
     </div>
     <ul class="person-list">
+
         {% if pais_e_maes %}
-            {% for pessoa in pais_e_maes %}
-            <li class="person-item">
-                {% if pessoa.foto_uri %}
-                    <img src="{{ pessoa.foto_uri }}" class="avatar" alt="Foto de {{ pessoa.nome }}">
-                {% else %}
-                    <div class="avatar-placeholder"><i class="bi bi-person-fill"></i></div>
-                {% endif %}
-                <div class="person-info">
-                    <span class="person-name">{{ pessoa.nome }}</span>
-                    <span class="person-detail">{{ pessoa.tipoVinculo.descricao if pessoa.tipoVinculo else 'Responsável' }}</span>
+        <li class="person-list-header">Responsáveis Diretos (Pai e Mãe)</li>
+        {% for pessoa in pais_e_maes %}
+        <li class="person-item">
+            {% if pessoa.foto_uri %}
+                <img src="{{ pessoa.foto_uri }}" class="avatar" alt="Foto de {{ pessoa.nome }}">
+            {% else %}
+                <div class="avatar-placeholder"><i class="bi bi-person-fill"></i></div>
+            {% endif %}
+            <div class="person-info">
+                <span class="person-name">{{ pessoa.nome }}</span>
+                <div class="person-details-group">
+                    {% if pessoa.tipoVinculo.descricao %}
+                    <span class="person-detail"><i class="bi bi-person-badge-fill"></i>{{ pessoa.tipoVinculo.descricao }}</span>
+                    {% endif %}
+                    {% if pessoa.cpf %}
+                    <span class="person-detail"><i class="bi bi-person-vcard"></i>{{ pessoa.cpf }}</span>
+                    {% endif %}
+                    {% if pessoa.telefone %}
+                    <span class="person-detail"><i class="bi bi-telephone-fill"></i>{{ pessoa.telefone }}</span>
+                    {% endif %}
                 </div>
-            </li>
-            {% endfor %}
+            </div>
+        </li>
+        {% endfor %}
         {% endif %}
 
         {% if outras_pessoas %}
-            {% for pessoa in outras_pessoas %}
-            <li class="person-item">
-                 {% if pessoa.foto_uri %}
-                    <img src="{{ pessoa.foto_uri }}" class="avatar" alt="Foto de {{ pessoa.nome }}">
-                {% else %}
-                    <div class="avatar-placeholder"><i class="bi bi-person-fill"></i></div>
-                {% endif %}
-                <div class="person-info">
-                    <span class="person-name">{{ pessoa.nome }}</span>
-                    <span class="person-detail">{{ pessoa.tipoVinculo.descricao if pessoa.tipoVinculo else 'Autorizado(a)' }}</span>
+        <li class="person-list-header">Outras Pessoas Autorizadas</li>
+        {% for pessoa in outras_pessoas %}
+        <li class="person-item">
+            {% if pessoa.foto_uri %}
+                <img src="{{ pessoa.foto_uri }}" class="avatar" alt="Foto de {{ pessoa.nome }}">
+            {% else %}
+                <div class="avatar-placeholder"><i class="bi bi-person-fill"></i></div>
+            {% endif %}
+            <div class="person-info">
+                <span class="person-name">{{ pessoa.nome }}</span>
+                <div class="person-details-group">
+                    {% if pessoa.rg %}
+                    <span class="person-detail"><i class="bi bi-person-vcard"></i>{{ pessoa.rg }}</span>
+                    {% endif %}
+                    {% if pessoa.contato or pessoa.telefone %}
+                    <span class="person-detail"><i class="bi bi-telephone-fill"></i>{{ pessoa.contato or pessoa.telefone }}</span>
+                    {% endif %}
                 </div>
-            </li>
-            {% endfor %}
+            </div>
+        </li>
+        {% endfor %}
         {% endif %}
 
         {% if not pais_e_maes and not outras_pessoas %}
-            <li class="person-item-empty">Nenhuma pessoa autorizada encontrada.</li>
+        <li class="person-item-empty">Nenhuma pessoa autorizada encontrada.</li>
         {% endif %}
     </ul>
 </div>
 
 <div class="info-card">
-    <div class="card-header">
-        <i class="bi bi-check2-circle card-icon"></i>
-        <h3>Regras Gerais de Saída</h3>
     </div>
-    <ul class="rules-list">
-        <li class="rule-item">
-            <span>Sair somente acompanhado</span>
-            <span class="rule-status {% if regras_saida.acompanhado %}allowed{% else %}denied{% endif %}">
-                <i class="bi {% if regras_saida.acompanhado %}bi-check-lg{% else %}bi-x-lg{% endif %}"></i>
-            </span>
-        </li>
-        <li class="rule-item">
-            <span>Sair sozinho</span>
-            <span class="rule-status {% if regras_saida.sozinho %}allowed{% else %}denied{% endif %}">
-                <i class="bi {% if regras_saida.sozinho %}bi-check-lg{% else %}bi-x-lg{% endif %}"></i>
-            </span>
-        </li>
-         <li class="rule-item">
-            <span>Usar Condução Escolar</span>
-            <span class="rule-status {% if regras_saida.conducao %}allowed{% else %}denied{% endif %}">
-                <i class="bi {% if regras_saida.conducao %}bi-check-lg{% else %}bi-x-lg{% endif %}"></i>
-            </span>
-        </li>
-        <li class="rule-item">
-            <span>Aguardar fora do colégio</span>
-            <span class="rule-status {% if regras_saida.fora_escola %}allowed{% else %}denied{% endif %}">
-                <i class="bi {% if regras_saida.fora_escola %}bi-check-lg{% else %}bi-x-lg{% endif %}"></i>
-            </span>
-        </li>
-        <li class="rule-item">
-            <span>Saída no término do horário regular</span>
-            <span class="rule-status {% if regras_saida.horario_regular %}allowed{% else %}denied{% endif %}">
-                <i class="bi {% if regras_saida.horario_regular %}bi-check-lg{% else %}bi-x-lg{% endif %}"></i>
-            </span>
-        </li>
-        <li class="rule-item">
-            <span>Saída no término das atividades extras</span>
-            <span class="rule-status {% if regras_saida.atividade_extra %}allowed{% else %}denied{% endif %}">
-                <i class="bi {% if regras_saida.atividade_extra %}bi-check-lg{% else %}bi-x-lg{% endif %}"></i>
-            </span>
-        </li>
-    </ul>
-</div>
 {% endblock %}
